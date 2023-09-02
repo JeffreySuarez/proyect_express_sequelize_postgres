@@ -311,3 +311,56 @@ module.exports = Project;
 **Nota:** -->En el procedimiento anterior obligamos a crear las tablas directamente desde el index.js pero no es la idea, a continuacion veremos como se debe hacer.
 
 **14.** Crearemos las rutas del proyecto
+
+![alt text](./assets/img/rutas.PNG)
+
+En la ruta creada projects.routes.js creamos lo siguiente:
+
+```
+const Router = require("express");
+
+const router = Router();
+
+//definimos las rutas
+
+router.get("/projects"); //obtener
+router.post("/projects"); //crear
+router.put("/projects/:id"); //actualizar un solo proyecto
+router.delete("/projects/:id"); //eliminar un solo proyecto
+router.get("/projects/:id"); // obtener un solo proyecto
+
+module.exports = router;
+```
+
+- Despues podemos empezar a importarlos, nos dirigimos a app.js
+
+- Nota --> cada vez que damos en guardar en VS en las tablas se genera un DROPE, borra y crea las tablas entonces para que no haga eso vamos a hacer lo siguiente:
+
+Eliminaremos las importaciones de los modulos y en sequilize.sync lo dejamos en false en el index.js. Esto lo vamos a ir cambiando a medida que vamos desarrollando.
+
+```
+const server = require("../src/app");
+
+require("dotenv").config();
+const sequelize = require("../src/database/database");
+const port = process.env.PORT;
+
+const main = async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ force: false });
+    server.listen(port, () => {
+      console.log(`use port ${port}`);
+    });
+    console.log("Connection has been established successfully.");
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
+  }
+};
+
+main();
+```
+
+Ahora para seguir con las rutas y probarlas, nos toca meterle algo de lógica, en este caso vamos a crear los controllers. Crearemos dentro de la carpeta projects.controller.js y tasks.controller.js
+
+![alt text](./assets/img/controller.PNG)
