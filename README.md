@@ -905,3 +905,190 @@ const createTask = async (req, res) => {
 - Lo vemos en la base de datos ya creados
 
 ![alt text](./assets/img/taskPost1.PNG)
+
+### Ahora vamos a crear las otras funcionabilidades para getTask, deleteTask y putTask
+
+- Iremos a crearlas en tasks.controller.js
+
+```
+const getTask = async (req, res) => {};
+
+const updateTask = async (req, res) => {};
+
+const deleteTask = async (req, res) => {};
+```
+
+- Ahora vamos a tasks.routes.js para importarlas y asignarlas
+
+```
+const express = require("express");
+const router = express.Router();
+
+//Importamos los controllers
+
+const { getTasks, createTask, getTask, deleteTask, updateTask } = require("../controllers/tasks.controller");
+
+//Definimos las rutas
+
+router.get("/tasks", getTasks);
+router.post("/tasks", createTask);
+router.put("/tasks/:id", updateTask);
+router.delete("/tasks/:id", deleteTask);
+router.get("/tasks/:id", getTask);
+
+module.exports = router;
+```
+
+**Se realiza el getTask**
+
+```
+const getTask = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const task = await Task.findOne({
+      where: {
+        projectID: id,
+      },
+    });
+    if (!task) return res.status(404).json({ message: "task no existe" });
+    res.json(task);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+![alt text](./assets/img/taskId.PNG)
+
+**Se realiza el deleteTask**
+
+```
+const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await Task.destroy({
+      where: {
+        projectID: id,
+      },
+    });
+
+    console.log("El id a eliminar es --> " + req.params.id);
+    res.sendStatus(204);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+![alt text](./assets/img/deleteTask.PNG)
+
+```
+use port 3000
+Executing (default): SELECT "taskID", "name", "done", "projectID" FROM "tasks" AS "tasks" WHERE "tasks"."projectID" = '2';
+Executing (default): DELETE FROM "tasks" WHERE "projectID" = '1'
+El id a eliminar es --> 1
+```
+
+**Se realiza el updateTask**
+
+```
+const updateTask = async (req, res) => {
+  const { id } = req.params;
+  const { name, done } = req.body;
+
+  try {
+    const task = await Task.findOne({
+      where: {
+        taskID: id,
+      },
+    });
+    task.name = name;
+    task.done = done;
+    console.log(task);
+    await task.save();
+    res.json(task);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+![alt text](./assets/img/taskput.PNG)
+
+- Vemos en la consulta get
+
+![alt text](./assets/img/taskput1.PNG)
+
+## VEREMOS UN TEMA IMPORTANTE DE LAS RELACIONES DE RUTAS
+
+- Hasta el momento tenemos dos modelos de datos, una de projects y una de tasks
+
+La cual los hemos relacionado y lo hemos realizado con hastMany y belongTo
+
+```
+
+/*
+hasMany --> un proyecto tiene muchas tareas
+y le decimos que el foreignkey se llamara en task projectID
+adicional que viene de projectID de projects
+*/
+
+Project.hasMany(Task, {
+  foreignKey: "projectID",
+  sourceKey: "projectID",
+});
+
+/*
+ahora crearemos a donde pertenece tareas
+
+Task.belongsTo(Project,{
+   foreignKey: "projectID",
+    targetID: "projectID",
+
+    como esta es la tabla que va a estar enlazandoce
+    en la tabla padre colocamos targetID
+})
+*/
+
+Task.belongsTo(Project, {
+  foreignKey: "projectID",
+  targetId: "projectID",
+});
+```
+
+**Si queremos ver de un projecto sus tareas asignadas, tenemos que crear una ruta que indique lo que queremos adicional crear una funcion que me traiga todas las tareas de ese project.**
+
+- vamos a projects.routes.js y lo hacemos ahi
+
+```
+//traer las tasks de un project
+router.get("/projects/:id/tasks", getProjectTasks); // obtener un solo proyecto
+```
+
+- creamos la funcionabilidad en projects.controller.js
+
+```
+// Get project Tasks
+
+const getProjectTasks = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const tasks = await Task.findAll({
+      where: {
+        projectID: id,
+      },
+    });
+    res.json(tasks);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+- Con eso me trae todas las tareas de ese project en especifico en esa ruta.
+
+![alt text](./assets/img/getProjectTasks.PNG)
+
+# FINISH

@@ -1,4 +1,5 @@
 const Project = require("../models/Project");
+const Task = require("../models/Task");
 /*con la importacion de este modelo ya se puede ejecutar consultas
 de crear datos
 */
@@ -107,8 +108,26 @@ const deleteProject = async (req, res) => {
   }
 };
 
+// Get project Tasks
+
+const getProjectTasks = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const tasks = await Task.findAll({
+      where: {
+        projectID: id,
+      },
+    });
+    res.json(tasks);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports.getProjects = getProjects;
 module.exports.createProject = createProject;
 module.exports.updateProject = updateProject;
 module.exports.deleteProject = deleteProject;
 module.exports.getProject = getProject;
+module.exports.getProjectTasks = getProjectTasks;
