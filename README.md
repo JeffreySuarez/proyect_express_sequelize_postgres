@@ -364,3 +364,245 @@ main();
 Ahora para seguir con las rutas y probarlas, nos toca meterle algo de lógica, en este caso vamos a crear los controllers. Crearemos dentro de la carpeta projects.controller.js y tasks.controller.js
 
 ![alt text](./assets/img/controller.PNG)
+
+- Dentro del archivo projects.controller.js
+
+```
+const getProject = (req, res) => {
+  res.send("getting projects");
+};
+
+const createProject = (req, res) => {
+  res.send("creating projects");
+};
+
+module.exports.getProjects = getProjects;
+module.exports.createProject = createProject;
+```
+
+Este controller lo importaremos en la ruta projects.route.js
+
+```
+const express = require("express");
+const router = express.Router();
+
+const { getProjects, createProject } = require("../controllers/projects.controller");
+
+//definimos las rutas
+
+router.get("/projects", getProjects); //obtener
+router.post("/projects", createProject); //crear
+router.put("/projects/:id"); //actualizar un solo proyecto
+router.delete("/projects/:id"); //eliminar un solo proyecto
+router.get("/projects/:id"); // obtener un solo proyecto
+
+module.exports = router;
+```
+
+- Probaremos las rutas con postman
+
+Realizaremos la peticion get a la ruta http//localhost:3000/projects
+
+![alt text](./assets/img/postman1.PNG)
+
+me da respuesta getting projects
+
+y si realizo una peticion post, me da creating projects
+
+![alt text](./assets/img/postman2.PNG)
+
+Con esto sabemos que estan funcionando las rutas, ahora tenemos que enviarle datos. Empezaremos con createProject por que necesitamos crear algo.
+
+- Nos dirigimos a app.js, y tenemos que definir unos middlewares para recibir antes de crear.
+
+```
+const express = require("express");
+const projectsRoutes = require("./routes/projects.routes");
+
+const app = express();
+
+//middlewares
+
+app.use(express.json());
+/*con la linea anterior vamos a decirle a express que use un middleware
+llamado json.  Esta linea va a permitir que cada vez que se envie un
+dato en formato json el servidor va a poder interpretarlo y lo va a guardar
+dentro de un req.body
+*/
+
+app.use(projectsRoutes);
+
+module.exports = app;
+```
+
+- Nos dirigimos ahora a projects.controller.js y trabajaremos con la funcion createProject
+
+```
+const getProjects = (req, res) => {
+  res.send("getting projects");
+};
+
+const createProject = (req, res) => {
+  console.log(req.body);
+  res.send("creating projects");
+};
+
+module.exports.getProjects = getProjects;
+module.exports.createProject = createProject;
+```
+
+- Revisando el postman con la peticion post se crea en body el objeto a enviar de projects. y nos da respuesta en consola.
+
+![alt text](./assets/img/postman3.PNG)
+
+```
+[nodemon] restarting due to changes...
+[nodemon] starting `node src/index.js`
+Executing (default): SELECT 1+1 AS result
+Executing (default): SELECT 1+1 AS result
+Connection has been established successfully.
+use port 3000
+{}
+{}
+{
+  name: 'project 1',
+  priority: 10,
+  description: 'some project description'
+}
+```
+
+- Aqui nos muestra que lo recibio y podre guardarlos.
+  Para guardarlos tengo que importar mi modelo en el controller
+
+```
+const Project = require("../models/Project");
+/*con la importacion de este modelo ya se puede ejecutar consultas
+de crear datos
+*/
+const getProjects = (req, res) => {
+  res.send("getting projects");
+};
+
+const createProject = async (req, res) => {
+  console.log(req.body);
+  const { name, priority, description } = req.body;
+  const newProject = await Project.create({
+    name: name,
+    priority: priority,
+    description: description,
+  });
+  console.log(newProject);
+  res.send("creating projects");
+};
+
+module.exports.getProjects = getProjects;
+module.exports.createProject = createProject;
+```
+
+- Se gener auna respuesta y lo podemos ver tanto en postgres como en la consola, en dataValues.
+
+![alt text](./assets/img/metodoPost.PNG)
+
+```
+projects {
+  dataValues: {
+    projectID: 1,
+    name: 'project 2',
+    priority: 8,
+    description: 'other project description'
+  },}
+
+```
+
+- Se observa que se agrego a la base de datos con el metodo POST.
+
+**Ahora si queremos ver los datos nos vamos a getProjects**
+
+```
+const Project = require("../models/Project");
+/*con la importacion de este modelo ya se puede ejecutar consultas
+de crear datos
+*/
+
+// Ver datos
+const getProjects = async (req, res) => {
+  const projects = await Project.findAll();
+  //El findALL de todas las filas las recorre y forma un arreglo.
+
+  console.log(projects);
+
+  res.json(projects);
+  /* en el res.json, dice que va a enviar un json y vas a mostrar este
+  arreglo de proyectos. */
+};
+
+//Crear Datos
+const createProject = async (req, res) => {
+  console.log(req.body);
+  const { name, priority, description } = req.body;
+  const newProject = await Project.create({
+    name: name,
+    priority: priority,
+    description: description,
+  });
+  console.log(newProject);
+  res.send("creating projects");
+};
+
+module.exports.getProjects = getProjects;
+module.exports.createProject = createProject;
+```
+
+- Observamos en postman como se ve la consulta en json.
+
+![alt text](./assets/img/metodoGet.PNG)
+
+- Algo importante es como visualizar los errores en una peticion, vamos a usar try catch en los controlller
+
+```
+const Project = require("../models/Project");
+/*con la importacion de este modelo ya se puede ejecutar consultas
+de crear datos
+*/
+
+// Ver datos
+const getProjects = async (req, res) => {
+  try {
+    throw new Error("error get");
+    const projects = await Project.findAll();
+    //El findALL de todas las filas las recorre y forma un arreglo.
+
+    console.log(projects);
+
+    res.json(projects);
+    /* en el res.json, dice que va a enviar un json y vas a mostrar este
+        arreglo de proyectos. */
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+//Crear Datos
+const createProject = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { name, priority, description } = req.body;
+    const newProject = await Project.create({
+      name: name,
+      priority: priority,
+      description: description,
+    });
+    console.log(newProject);
+    res.json(newProject);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports.getProjects = getProjects;
+module.exports.createProject = createProject;
+```
+
+- El throw new Erro("Error get) es para probar si hay un error pero se deja comentado. El error lo podemos ver en postman.
+
+![alt text](./assets/img/error.PNG)

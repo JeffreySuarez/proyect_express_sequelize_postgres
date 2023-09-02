@@ -1,11 +1,12 @@
-const Router = require("express");
+const express = require("express");
+const router = express.Router();
 
-const router = Router();
+const { getProjects, createProject } = require("../controllers/projects.controller");
 
 //definimos las rutas
 
-router.get("/projects"); //obtener
-router.post("/projects"); //crear
+router.get("/projects", getProjects); //obtener
+router.post("/projects", createProject); //crear
 router.put("/projects/:id"); //actualizar un solo proyecto
 router.delete("/projects/:id"); //eliminar un solo proyecto
 router.get("/projects/:id"); // obtener un solo proyecto
