@@ -1,3 +1,5 @@
+# CREACION CRUD
+
 **1.** npm init - y -->comando de node.js que nos permite crear un documento package.json, donde vamos a poder listar sentencia y algunos scripst.
 
 ```
@@ -807,3 +809,99 @@ const getProject = async (req, res) => {
 ```
 
 ![alt text](./assets/img/testGetId1.PNG)
+
+## Ahora empezaremos la seccion del CRUD de Tasks
+
+- Nos dirigimos a la carpeta routes y en el documento tasks.routes.js haremos las rutas para este crud.
+
+- Definimos las rutas en tasks.routes.js
+
+```
+const express = require("express");
+const router = express.Router();
+
+//Definimos las rutas
+
+router.get("/tasks");
+router.post("/tasks");
+router.put("/tasks/:id");
+router.delete("/tasks/:id");
+router.get("/tasks/:id");
+
+module.exports = router;
+```
+
+- Lo importamos en app.js
+
+```
+const express = require("express");
+const projectsRoutes = require("./routes/projects.routes");
+const tasksRoutes = require("../src/routes/tasks.routes");
+
+const app = express();
+
+//middlewares
+
+app.use(express.json());
+/*con la linea anterior vamos a decirle a express que use un middleware
+llamado json.  Esta linea va a permitir que cada vez que se envie un
+dato en formato json el servidor va a poder interpretarlo y lo va a guardar
+dentro de un req.body
+*/
+
+app.use(projectsRoutes);
+app.use(tasksRoutes);
+
+module.exports = app;
+```
+
+### Crearemos los controller de get y post
+
+```
+const Task = require("../models/Task");
+
+const getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.findALL();
+    res.json(tasks);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const createTask = async (req, res) => {};
+
+module.exports.getTasks = getTasks;
+module.exports.createTask = createTask;
+```
+
+**Creamos la funcionabilidad de createTask**
+
+```
+const createTask = async (req, res) => {
+  try {
+    const { name, done, projectID } = req.body;
+
+    const newTask = await Task.create({
+      name: name,
+      done: done,
+      projectID: projectID,
+      /*
+      con projectID es para relacionar a que id vamos a asignar esta
+      tarea en particular. Como es una foreignKey
+      */
+    });
+    res.json(newTask);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+- Asi vemos la consulta del post en tasks
+
+![alt text](./assets/img/posTask.PNG)
+
+- Lo vemos en la base de datos ya creados
+
+![alt text](./assets/img/taskPost1.PNG)

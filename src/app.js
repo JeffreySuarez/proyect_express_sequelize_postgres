@@ -1,5 +1,6 @@
 const express = require("express");
 const projectsRoutes = require("./routes/projects.routes");
+const tasksRoutes = require("../src/routes/tasks.routes");
 
 const app = express();
 
@@ -13,5 +14,6 @@ dentro de un req.body
 */
 
 app.use(projectsRoutes);
+app.use(tasksRoutes);
 
 module.exports = app;

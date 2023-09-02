@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+//Importamos los controllers
+
 const { getProjects, createProject, updateProject, deleteProject, getProject } = require("../controllers/projects.controller");
 
 //definimos las rutas
