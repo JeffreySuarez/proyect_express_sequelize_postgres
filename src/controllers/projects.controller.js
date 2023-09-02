@@ -3,7 +3,7 @@ const Project = require("../models/Project");
 de crear datos
 */
 
-// Ver datos
+// see all projects
 const getProjects = async (req, res) => {
   try {
     // throw new Error("error get");
@@ -20,7 +20,26 @@ const getProjects = async (req, res) => {
   }
 };
 
-//Crear Datos
+// see only one project : id
+const getProject = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const project = await Project.findOne({
+      where: {
+        projectID: id,
+      },
+    });
+
+    if (!project) return res.status(404).json({ message: "Project no existe" });
+
+    res.json(project);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+//Create project
 const createProject = async (req, res) => {
   try {
     console.log(req.body);
@@ -37,5 +56,59 @@ const createProject = async (req, res) => {
   }
 };
 
+// Update project
+const updateProject = async (req, res) => {
+  try {
+    //vamos a extraer el id que vienen de req.params
+
+    const { id } = req.params;
+
+    //Estraemos los datos que vienen del req.body
+    //con esto vamos a poder actualizar un proyecto
+    const { name, priority, description } = req.body;
+
+    //para poder ver si poder actualizar estos datos vamos a ver si los tenemos
+    console.log(id);
+    console.log(req.body);
+
+    const project = await Project.findByPk(id);
+    project.name = name;
+    project.priority = priority;
+    project.description = description;
+    console.log(project);
+
+    //ya conociendo que ha acutalizado ahora vamos a guarduarlo para hacer la consulta
+
+    await project.save(); //con esto lo guarda en la base de datos.
+
+    res.json(project);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete project
+const deleteProject = async (req, res) => {
+  try {
+    /*utilizando el modelo Project vasmoa a buscar una propiedad
+    que nos permite buscar y eliminar al mismo tiempo */
+    //vamos a extraer el id que viene de req.params
+    const { id } = req.params;
+    await Project.destroy({
+      where: {
+        projectID: id,
+      },
+    });
+
+    console.log("El id a eliminar es --> " + req.params.id);
+    res.sendStatus(204);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports.getProjects = getProjects;
 module.exports.createProject = createProject;
+module.exports.updateProject = updateProject;
+module.exports.deleteProject = deleteProject;
+module.exports.getProject = getProject;

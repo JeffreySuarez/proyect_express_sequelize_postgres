@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-const { getProjects, createProject } = require("../controllers/projects.controller");
+const { getProjects, createProject, updateProject, deleteProject, getProject } = require("../controllers/projects.controller");
 
 //definimos las rutas
 
 router.get("/projects", getProjects); //obtener
 router.post("/projects", createProject); //crear
-router.put("/projects/:id"); //actualizar un solo proyecto
-router.delete("/projects/:id"); //eliminar un solo proyecto
-router.get("/projects/:id"); // obtener un solo proyecto
+router.put("/projects/:id", updateProject); //actualizar un solo proyecto
+router.delete("/projects/:id", deleteProject); //eliminar un solo proyecto
+router.get("/projects/:id", getProject); // obtener un solo proyecto
 
 module.exports = router;

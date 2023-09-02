@@ -361,6 +361,8 @@ const main = async () => {
 main();
 ```
 
+**15.** Crearemos los controllers
+
 Ahora para seguir con las rutas y probarlas, nos toca meterle algo de lógica, en este caso vamos a crear los controllers. Crearemos dentro de la carpeta projects.controller.js y tasks.controller.js
 
 ![alt text](./assets/img/controller.PNG)
@@ -606,3 +608,202 @@ module.exports.createProject = createProject;
 - El throw new Erro("Error get) es para probar si hay un error pero se deja comentado. El error lo podemos ver en postman.
 
 ![alt text](./assets/img/error.PNG)
+
+- Seguimos con los controllers de delete y update en projects.controller.js.
+
+Se creara el delete y el update de un id en especifico usando req.params.id
+
+Haremos un ejercicio para ver el id
+
+```
+// Delete
+
+const deleteProject = (req, res) => {
+  console.log(req.params.id);
+  res.send("deleting project");
+};
+```
+
+![alt text](./assets/img/delecte.PNG)
+
+![alt text](./assets/img/delete.PNG)
+
+con eso observamos que obtenemos el id y ya seria realizar la logica para eliminarlo de la base de datos.
+
+```
+
+// Delete
+
+const deleteProject = async (req, res) => {
+  try {
+    /*utilizando el modelo Project vasmoa a buscar una propiedad
+    que nos permite buscar y eliminar al mismo tiempo */
+    //vamos a extraer el id que viene de req.params
+    const { id } = req.params;
+    await Project.destroy({
+      where: {
+        projectID: id,
+      },
+    });
+
+    console.log("El id a eliminar es --> " + req.params.id);
+    res.sendStatus(204);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+![alt text](./assets/img/delete1.PNG)
+
+```
+Executing (default): DELETE FROM "projects" WHERE "projectID" = '5'
+El id a eliminar es --> 5
+Executing (default): SELECT "projectID", "name", "priority", "description" FROM "projects" AS "projects";
+```
+
+- Para el update haremos algo parecido y necesitamos obtener un req.body ya que necesitamos los nuevos datos a actualizar.
+
+```
+
+
+const updateProject = (req, res) => {
+  try {
+    //vamos a extraer el id que vienen de req.params
+
+    const { id } = req.params;
+
+    //Estraemos los datos que vienen del req.body
+    //con esto vamos a poder actualizar un proyecto
+    const { name, priority, description } = req.body;
+
+    //para poder ver si poder actualizar estos datos vamos a ver si los tenemos
+    console.log(id);
+    console.log(req.body);
+
+    res.send("updating project");
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+Con esto veremos la respuesta en consola y la consultas por postman.
+
+```
+
+2
+{
+  name: 'project 5',
+  priority: 6,
+  description: 'update project description'
+}
+
+```
+
+![alt text](./assets/img/updating.PNG)
+
+- Ahora si vamos a hacerlo con sequelize hacia la base de datos.
+
+```
+
+const updateProject = async (req, res) => {
+  try {
+    //vamos a extraer el id que vienen de req.params
+
+    const { id } = req.params;
+
+    //Estraemos los datos que vienen del req.body
+    //con esto vamos a poder actualizar un proyecto
+    const { name, priority, description } = req.body;
+
+    //para poder ver si poder actualizar estos datos vamos a ver si los tenemos
+    console.log(id);
+    console.log(req.body);
+
+    const project = await Project.findByPk(id);
+    project.name = name;
+    project.priority = priority;
+    project.description = description;
+    console.log(project);
+
+    //ya conociendo que ha acutalizado ahora vamos a guarduarlo para hacer la consulta
+
+    await project.save(); //con esto lo guarda en la base de datos.
+
+    res.json(project);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+- Vamos a ver el proceso de actualizacion.
+- Primero realizamos el get para ver que objetos tenemos en la base de datos.
+
+![alt text](./assets/img/testGet.PNG)
+
+- Ahora vamos a actualizar el id 2
+
+![alt text](./assets/img/testUpdate.PNG)
+
+- Vemos que se actualizo en postman
+
+![alt text](./assets/img/testUpdate1.PNG)
+
+- Vemos que se actualizo en la consola.
+
+![alt text](./assets/img/testUpdate2.PNG)
+
+- Vemos que se actualizo en la base de datos.
+
+![alt text](./assets/img/testUpdate3.PNG)
+
+- Ahora nos faltaria una funcion donde queramos consultar un project en especifico, con su id.
+
+```
+// see only one project : id
+const getProject = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const project = await Project.findOne({
+      where: {
+        projectID: id,
+      },
+    });
+    res.json(project);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+- Al consultar con postman el me trae ese project con su id.
+
+![alt text](./assets/img/testGetId.PNG)
+
+Ahora si el projecto no existe podemos hacer una condicional que devuelva un mensaje y un error 404
+
+```
+// see only one project : id
+const getProject = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const project = await Project.findOne({
+      where: {
+        projectID: id,
+      },
+    });
+
+    if (!project) return res.status(404).json({ message: "Project no existe" });
+
+    res.json(project);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+```
+
+![alt text](./assets/img/testGetId1.PNG)
